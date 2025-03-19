@@ -1,0 +1,177 @@
+{% extends 'user/seat_layout.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">Seat Booking for {{ showtime.fk_movie.movie_name }}</h2>
+    <p>Showtime: {{ showtime.show_time }}</p>
+
+    <!-- Date Selection -->
+    <label for="date-selection">Select Date:</label>
+    <select id="date-selection" class="form-control w-25">
+        {% for date in available_dates %}
+            <option value="{{ date|date:'Y-m-d' }}" {% if date == selected_date %}selected{% endif %}>
+                {{ date|date:'Y-m-d' }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <!-- Seat Layout -->
+    <div class="seat-container">
+        <div class="screen">
+            <h4>SCREEN</h4>
+        </div>
+
+        {% for seat in seats %}
+            {% if forloop.counter0|divisibleby:50 and not forloop.first %}
+                <div class="seat-section-gap"></div> <!-- Adds a gap after every 50 seats -->
+            {% endif %}
+            <button class="seat btn {% if seat.seat_number in booked_seats %}btn-danger disabled{% else %}btn-outline-success{% endif %}"
+                    data-seat="{{ seat.seat_number }}"
+                    {% if seat.seat_number in booked_seats %}disabled{% endif %}>
+                {{ seat.seat_number }}
+            </button>
+        {% endfor %}
+    </div>
+
+    <!-- Booking Options -->
+    <div class="booking-options mt-4">
+        <label for="booking-type">Select Booking Type:</label>
+        <select id="booking-type" class="form-control w-25">
+            <option value="direct">Direct Booking</option>
+            <option value="flexi">Flexi Booking</option>
+        </select>
+
+        <label for="payment-method">Select Payment Method:</label>
+        <select id="payment-method" class="form-control w-25">
+            <option value="gpay">Google Pay</option>
+            <option value="phonepe">PhonePe</option>
+            <option value="paytm">Paytm</option>
+        </select>
+
+        <!-- Total Price Display -->
+        <div class="mt-3">
+            <h5>Total Price: ₹<span id="total-price">0</span></h5>
+        </div>
+
+        <button id="confirm-booking" class="btn btn-primary mt-3">Confirm Booking</button>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+    .seat-container {
+        text-align: center;
+        margin: 20px 0;
+    }
+    .screen {
+        width: 100%;
+        height: 50px;
+        background: #040c55;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+    .seat {
+        margin-top: 20px;
+        width: 60px;
+        height: 60px;
+        font-size: 14px;
+        border-radius: 5px;
+        color: #fff;
+    }
+    .btn-danger {
+        background-color: #ff0720; /* Booked seats */
+    }
+    .btn-outline-success {
+        border: 1px solid #06127c; /* Available seats */
+        color: #d1dad3;
+    }
+    .selected {
+        background-color: orange !important;
+        color: #fff;
+    }
+    .seat-section-gap {
+        width: 100%;
+        height: 40px;
+    }
+</style>
+
+<!-- Scripts -->
+<script>
+    let selectedSeats = new Set();
+    let seatPrice = 150; // Price per seat
+
+    // Handle date selection change
+    document.getElementById("date-selection").addEventListener("change", function() {
+        let selectedDate = this.value;
+        let url = new URL(window.location.href);
+        url.searchParams.set("date", selectedDate);
+        window.location.href = url.href;
+    });
+
+    // Handle seat selection
+    document.querySelectorAll(".seat").forEach(seat => {
+        seat.addEventListener("click", function() {
+            if (!this.classList.contains("btn-danger")) {
+                let seatNumber = this.getAttribute("data-seat");
+                if (selectedSeats.has(seatNumber)) {
+                    selectedSeats.delete(seatNumber);
+                    this.classList.remove("selected");
+                } else {
+                    selectedSeats.add(seatNumber);
+                    this.classList.add("selected");
+                }
+
+                // Update Total Price
+                let totalPrice = selectedSeats.size * seatPrice;
+                document.getElementById("total-price").innerText = totalPrice;
+            }
+        });
+    });
+
+    // Handle booking confirmation
+    document.getElementById("confirm-booking").addEventListener("click", function() {
+        let seat_numbers = Array.from(selectedSeats);
+        if (seat_numbers.length === 0) {
+            alert("Please select at least one seat before booking.");
+            return;
+        }
+
+        let selectedDate = document.getElementById("date-selection").value;
+        let bookingType = document.getElementById("booking-type").value;
+        let paymentMethod = document.getElementById("payment-method").value;
+        let totalPrice = selectedSeats.size * seatPrice; // Calculate total price
+
+        let requestData = {
+            seat_numbers: seat_numbers,
+            showtime_id: "{{ showtime.id }}",
+            selected_date: selectedDate,
+            booking_type: bookingType,
+            payment_method: paymentMethod,
+            total_price: totalPrice // Include total price in request
+        };
+
+        console.log("Sending Booking Data:", requestData);
+
+        fetch("{% url 'book_seat' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.status === "success") {
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
+{% endblock %}

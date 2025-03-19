@@ -1,0 +1,266 @@
+{% extends 'theatre/theatre_layout.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* General Styling */
+    body {
+        background-color: #121212;
+        color: #fff;
+        font-family: 'Arial', sans-serif;
+    }
+
+    .container {
+        width: 90%;
+        margin: 30px auto;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #00d4ff;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #1c1c1c;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    th {
+        background-color: #00d4ff;
+        color: #fff;
+        padding: 12px;
+    }
+
+    td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #333;
+    }
+
+    tr:hover {
+        background-color: #222;
+    }
+
+    .btn-cancel {
+        background-color: #3d5afe;
+        color: white;
+        padding: 7px 15px;
+        text-decoration: none;
+        border-radius: 20px;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-cancel:hover {
+        background-color: #1e88e5;
+    }
+
+    .movie-name {
+        font-weight: bold;
+        color: #00d4ff;
+    }
+
+    .payment-method {
+        background-color: #2e7d32;
+        color: white;
+        padding: 5px 12px;
+        border-radius: 5px;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    /* Modal Design */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: #1c1c1c;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        width: 50%;
+        color: white;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #e53935;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        table {
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 8px;
+        }
+
+        .btn-cancel {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .modal-content {
+            width: 90%;
+        }
+    }
+</style>
+
+<div class="container">
+    <h2>Booking Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Sl No</th>
+                <th>User Name</th>
+                <th>Movie Name</th>
+                <th>Date</th>
+                <th>Show Time</th>
+                <th>Seats</th>
+                <th>Payment Method</th>
+                {% comment %} <th>Booking Date</th> {% endcomment %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ booking.fk_user.username }}</td>
+                    <td class="movie-name">{{ booking.movie_name }}</td>
+                    <td>{{ booking.booking_date|date:"d-m-Y" }}</td>
+                    <td>{{ booking.show_time }}</td>
+                    <td>
+                        <button class="btn-cancel" onclick="openModal('{{ booking.booking_id }}')">
+                            {{ booking.seats|length }} Seats Booked
+                        </button>
+
+                        <!-- Modal Start -->
+                        <div class="modal" id="modal-{{ booking.booking_id }}">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeModal('{{ booking.booking_id }}')">&times;</span>
+                                <h3>Booked Seats for {{ booking.movie_name }}</h3>
+                                <div>
+                                    {% for seat in booking.seats %}
+                                        <span class="payment-method">{{ seat.seat_number }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal End -->
+                    </td>
+                    <td>
+                        {% for method in booking.payment_methods %}
+                            <span class="payment-method">{{ method|title }}</span>
+                        {% endfor %}
+                    </td>
+                    {% comment %} <td>{{ booking.booking_date|date:"d-m-Y h:i A" }}</td> {% endcomment %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- JavaScript for Modal -->
+<script>
+    function openModal(bookingId) {
+        var modal = document.getElementById('modal-' + bookingId);
+        modal.style.display = 'flex';
+    }
+
+    function closeModal(bookingId) {
+        var modal = document.getElementById('modal-' + bookingId);
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        var modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+{% endblock %}
+
+
+
+
+
+
+
+{% comment %} {% extends 'theatre/theatre_layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4"><br><br><br>
+    <h2 class="text-center mb-4 text-white">Booking Details</h2>
+    <div class="row">
+        {% regroup bookings by fk_user.username as grouped_bookings %}
+
+        {% for user_bookings in grouped_bookings %}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm bg-dark text-white">
+                <div class="card-body">
+                    <h5 class="card-title">{{ user_bookings.grouper }}</h5>
+                    {% for booking in user_bookings.list %}
+                        {% if forloop.first %}
+                            <p><strong>Booking Date:</strong> {{ booking.booking_date|date:"F d, Y H:i A" }}</p>
+                            <p><strong>Movie Name:</strong> {{ booking.fk_seat.fk_showtime.fk_movie.movie_name }}</p>
+                            <p><strong>Screen:</strong> {{ booking.fk_seat.fk_showtime.fk_movie.movie_screen }}</p>
+                            <p><strong>Show Time:</strong> {{ booking.fk_seat.fk_showtime.show_time }}</p>
+                        {% endif %}
+                    {% endfor %}
+                    <p><strong>Booked Seats:</strong> 
+                        {% for booking in user_bookings.list %}
+                            {{ booking.fk_seat.seat_number }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    <p><strong>Booking Type:</strong> {{ user_bookings.list.0.get_booking_type_display }}</p>
+                    <p><strong>Payment Method:</strong> {{ user_bookings.list.0.get_payment_method_display }}</p>
+                    <p><strong>Cancelled:</strong> {% if user_bookings.list.0.is_cancelled %} Yes {% else %} No {% endif %}</p>
+                    {% if user_bookings.list.0.is_cancelled %}
+                        <p><strong>Cancellation Status:</strong> {{ user_bookings.list.0.get_cancellation_status_display }}</p>
+                        <p><strong>Reason:</strong> {{ user_bookings.list.0.cancellation_reason }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-center text-white">No bookings available.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} {% endcomment %}
+
+
+

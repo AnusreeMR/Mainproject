@@ -1,0 +1,55 @@
+{% extends 'theatre/theatre_layout.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<div style="margin-top: 5%;">
+<div class="container mt-4">
+    <h2>Theatre Admin - Booking Management</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Seat</th>
+                <th>Booking Type</th>
+                <th>Payment Method</th>
+                <th>Booking Date</th>
+                <th>Cancellation Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.fk_user.username }}</td>
+                    <td>{{ booking.fk_seat.seat_number }}</td>
+                    <td>{{ booking.booking_type|title }}</td>
+                    <td>{{ booking.payment_method|title }}</td>
+                    <td>{{ booking.booking_date }}</td>
+                    <td>
+                        {% if booking.cancellation_status == "pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif booking.cancellation_status == "approved" %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-secondary">None</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if booking.cancellation_status == "pending" %}
+                            <a href="{% url 'approve_cancellation' booking.id %}" class="btn btn-success btn-sm">Approve</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">No bookings found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}
