@@ -1,0 +1,90 @@
+{% extends 'theatre/theatre_layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <br><br>
+    <h2>Edit Movie</h2>
+   <!-- Inside your HTML template -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="row">
+        <!-- Movie Name -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="movie_name" class="form-label">Movie Name</label>
+                <input type="text" style="color: white;" class="form-control" id="movie_name" name="movie_name" value="{{ movie.movie_name }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_genre" class="form-label">Genre</label>
+                <input type="text"  style="color: white;" class="form-control" id="movie_genre" name="movie_genre" value="{{ movie.movie_genre }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_language" class="form-label">Language</label>
+                <input type="text" style="color: white;" class="form-control" id="movie_language" name="movie_language" value="{{ movie.movie_language }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_crew" class="form-label">Crew</label>
+                <input type="text" style="color: white;" class="form-control" id="movie_crew" name="movie_crew"  value="{{ movie.movie_crew }}" >
+            </div>
+            <div class="mb-3">
+                <label for="movie_duration" class="form-label">Duration (in hours)</label>
+                <input type="number" style="color: white;"  class="form-control" id="movie_duration" name="movie_duration" value="{{ movie.movie_duration }}">
+            </div>
+        </div>
+
+        <!-- Second Column -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="movie_release_date" class="form-label">Release Date</label>
+                <input type="date" style="color: white;" class="form-control" id="movie_release_date" name="movie_release_date" value="{{ movie.movie_release_date|date:'Y-m-d' }}">
+            </div>
+            {% comment %} <div class="mb-3">
+                <label for="movie_time_slot" class="form-label">Time Slot</label>
+                <input type="text" class="form-control" id="movie_time_slot" name="movie_time_slot" value="{{ movie.movie_time_slot }}">
+            </div> {% endcomment %}
+            <div class="mb-3">
+                <label for="movie_screen" class="form-label">Screen</label>
+                <input type="text" style="color: white;" class="form-control" id="movie_screen" name="movie_screen" value="{{ movie.movie_screen }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_cast" class="form-label">Cast</label>
+                <input type="text" style="color: white;" class="form-control" id="movie_cast" name="movie_cast" value="{{ movie.movie_cast }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_trailer" class="form-label">Movie Certificate</label>
+                <input type="text"  style="color: white;" class="form-control" id="movie_certificate" name="movie_certificate" value="{{ movie.movie_certificate }}">
+            </div>
+            <div class="mb-3">
+                <label for="movie_is_3d" class="form-label">3D</label>
+                <input type="checkbox" id="movie_is_3d" name="movie_is_3d" {% if movie.movie_is_3d %}checked{% endif %}>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description and Image -->
+    <div class="mb-3">
+        <label for="movie_description" class="form-label">Description</label>
+        <textarea class="form-control" style="color: white;" id="movie_description" name="movie_description" rows="4">{{ movie.movie_description }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="movie_trailer" class="form-label">Trailer Video</label>
+        <input type="file" class="form-control" id="movie_trailer" name="movie_trailer" accept="video/*">
+        {% if movie.movie_trailer %}
+            <p>Current Trailer: <a href="{{ movie.movie_trailer.url }}" target="_blank">Watch Trailer</a></p>
+        {% endif %}
+    </div>
+          
+    <div class="mb-3">
+        <label for="movie_image" class="form-label">Image</label>
+        <input type="file" class="form-control" id="movie_image" name="movie_image" accept="image/*">
+        {% if movie.movie_image %}
+            <img src="{{ movie.movie_image.url }}" alt="Movie Image" width="100">
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+</div>
+{% endblock %}

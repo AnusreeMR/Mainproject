@@ -1,0 +1,83 @@
+{% extends 'theatre/theatre_layout.html' %}
+
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <br><br>
+    <h2>Add New Movie</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row">
+            <!-- First Column -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label  for="movie_name" class="form-label">Movie Name</label>
+                    <input type="text" style="color: white;" class="form-control" id="movie_name" name="movie_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_genre" class="form-label">Genre</label>
+                    <input type="text" style="color: white;" class="form-control" id="movie_genre" name="movie_genre" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_language" class="form-label">Language</label>
+                    <input type="text" style="color: white;" class="form-control" id="movie_language" name="movie_language" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_crew" class="form-label">Crew</label>
+                    <input type="text" style="color: white;" class="form-control" id="movie_crew" name="movie_crew" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_duration" class="form-label">Duration (in hours)</label>
+                    <input type="number" style="color: white;" min="0" class="form-control" id="movie_duration" name="movie_duration" required>
+                </div>
+            </div>
+
+            <!-- Second Column -->
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="movie_release_date" class="form-label">Release Date</label>
+                    <input type="date" style="color: white;" class="form-control" id="movie_release_date" name="movie_release_date" required>
+                </div>
+                {% comment %} <div class="mb-3">
+                    <label for="movie_time_slot" class="form-label">Time Slot</label>
+                    <input type="text" class="form-control" id="movie_time_slot" name="movie_time_slot" required>
+                </div> {% endcomment %}
+                <div class="mb-3">
+                    <label for="movie_screen" class="form-label">Screen</label>
+                    <input type="text" style="color: white;" class="form-control" id="movie_screen" name="movie_screen" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_cast" class="form-label">Cast</label>
+                    <input type="text" style="color: white;"  class="form-control" id="movie_cast" name="movie_cast" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_trailer" class="form-label">Movie Certificate</label>
+                    <input type="text"  style="color: white;" class="form-control" id="movie_certificate" name="movie_certificate" required>
+                </div>
+                <div class="mb-3">
+                    <label for="movie_is_3d" class="form-label">3D</label>
+                    <input type="checkbox" style="color: white;" id="movie_is_3d" name="movie_is_3d">
+                </div>
+            </div>
+        </div>
+
+        <!-- Full-Width Section -->
+        <div class="mb-3">
+            <label for="movie_description" class="form-label">Description</label>
+            <textarea class="form-control" style="color: white;"  id="movie_description" name="movie_description" rows="4" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="movie_trailer" class="form-label">Trailer Video</label>
+            <input type="file" class="form-control" id="movie_trailer" name="movie_trailer" accept="video/*">
+        </div>        
+        <div class="mb-3">
+            <label for="movie_image" class="form-label">Image</label>
+            <input type="file" class="form-control" id="movie_image" name="movie_image" accept="image/*">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}
