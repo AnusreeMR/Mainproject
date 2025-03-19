@@ -1,0 +1,43 @@
+{% extends 'admin/admin_layout.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<div class="container">
+    <div class="card border-0">
+        <div class="card-header">
+            <h5 class="card-title">Movies List</h5>
+        </div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col" style="color: white;">#</th>
+                        <th scope="col" style="color: white;">Name</th>
+                        <th scope="col" style="color: white;">Email</th>
+                        <th scope="col" style="color: white;">Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in cus_users %}
+                    <tr>
+                        <th  style="color: white;" scope="row">{{ forloop.counter }}</th>
+                        <td  style="color: white;">{{ user.username }}</td>
+                        <td  style="color: white;">{{ user.email }}</td>
+                        <td ><a href="{% url 'user_delete' user.id %}" class="btn btn-sm btn-warning">Delete</a></td>
+                     
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td style="color: white;" colspan="7" class="text-center">No Theater found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock %}
