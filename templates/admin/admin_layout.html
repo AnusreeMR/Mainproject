@@ -68,32 +68,25 @@
               <span class="menu-title">Users</span>
             </a>
           </li>
-        
-        <li class="nav-item menu-items">
-          <a class="nav-link" href="#">
-              <span class="menu-icon">
-                  <i class="mdi mdi-calendar-check"></i> <!-- Changed to booking-related icon -->
-              </span>
-              <span class="menu-title">Bookings</span>
-          </a>
-      </li>
-      
           
-          <li class="nav-item menu-items">
-            <a class="nav-link" data-toggle="collapse" href="#ratings-menu" aria-expanded="false" aria-controls="ratings-menu">
-                <span class="menu-icon">
-                    <i class="mdi mdi-star" style="color: yellow;"></i> <!-- Set color to yellow -->
-                </span>
-                <span class="menu-title">Ratings</span>
-                <i class="menu-arrow"></i>
-            </a>
-            <div class="collapse" id="ratings-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item"> <a class="nav-link" href="#">Top Rated Theatre</a></li>
-                    <li class="nav-item"> <a class="nav-link" href="#">Top Rated Movies</a></li>
-                </ul>
-            </div>
-        </li>
+      <li class="nav-item menu-items">
+        <a class="nav-link" data-toggle="collapse" href="#complaints-menu" aria-expanded="false" aria-controls="complaints-menu">
+            <span class="menu-icon">
+                <i class="mdi mdi-comment-alert"></i> <!-- Changed to complaints-related icon -->
+            </span>
+            <span class="menu-title">Rating</span>
+            <i class="menu-arrow"></i>
+        </a>
+        <div class="collapse" id="complaints-menu">
+            <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link" href="{% url 'admin_view_theatre_reating' %}">Theatre Rating</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'admin_view_movie_rating' %}">Movie Rating</a></li>
+            </ul>
+        </div>
+    </li>
+
+
+        
         
         
           
@@ -106,10 +99,10 @@
               <i class="menu-arrow"></i>
           </a>
           <div class="collapse" id="complaints-menu">
-              <ul class="nav flex-column sub-menu">
-                  <li class="nav-item"> <a class="nav-link" href="#">Theatre</a></li>
-                  <li class="nav-item"> <a class="nav-link" href="#">User</a></li>
-              </ul>
+            <ul class="nav flex-column sub-menu">
+              <li class="nav-item"> <a class="nav-link" href="{% url 'list_theatre_to_admin_complaints_list' %}">Theatre</a></li>
+              <li class="nav-item"> <a class="nav-link" href="{% url 'admin_complaints' %}">User</a></li>
+          </ul>       
           </div>
       </li>
       
