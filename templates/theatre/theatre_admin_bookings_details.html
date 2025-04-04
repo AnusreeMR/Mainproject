@@ -1,9 +1,288 @@
 {% extends 'theatre/theatre_layout.html' %}
+{% block content %}
+<style>
+    /* General Styling */
+    body {
+        background-color: #000000;
+        color: #ffffff;
+        font-family: 'Arial', sans-serif;
+        font-size: 16px; /* Standard, readable size */
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 85%;
+        margin: 40px auto;
+        background: #000000;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        color:rgb(245, 245, 245); /* Dark red */
+        font-size: 24px;
+        font-weight: 700;
+        {% comment %} border-bottom: 2px solid #800000; {% endcomment %}
+        padding-bottom: 10px;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+        background-color: #000000;
+    }
+
+    th {
+        background-color: #800000; /* Dark red for headers */
+        color: #ffffff;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: left;
+        border-bottom: 1px solid #ffffff;
+    }
+
+    td {
+        padding: 12px;
+        text-align: left;
+        background-color: #111111;
+        border-bottom: 1px solid #333333;
+        transition: background-color 0.3s ease;
+        color: #ffffff; /* Ensure all data is white */
+    }
+
+    tr:hover td {
+        background-color: #222222;
+    }
+
+    .btn-cancel {
+        background-color: transparent;
+        color:rgb(228, 228, 228); /* Dark red for button text */
+        padding: 6px 14px;
+        text-decoration: none;
+        font-size: 14px;
+        border: 1px solid #800000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background-color: #800000;
+        color: #ffffff;
+    }
+
+    .movie-name {
+        font-weight: bold;
+        color: #ffffff; /* Changed to white */
+    }
+
+    .payment-method {
+        background-color: transparent;
+        color: #ffffff; /* Changed to white */
+        padding: 4px 10px;
+        display: inline-block;
+        margin: 2px;
+        font-size: 14px;
+        border: 1px solid #800000;
+        transition: all 0.3s ease;
+    }
+
+    .payment-method:hover {
+        background-color: #800000;
+        color: #ffffff;
+    }
+
+    /* Date Column Styling */
+    .date-column {
+        white-space: nowrap; /* Keeps date on one line */
+        min-width: 100px; /* Ensures enough space */
+    }
+
+    .booking-date-column {
+        white-space: nowrap; /* Keeps booking date on one line */
+        min-width: 150px; /* More space for time inclusion */
+    }
+    .show-time-column {
+        white-space: nowrap; /* Keeps date on one line */
+        min-width: 150px; /* Ensures enough space */
+    }
+    /* Modal Design */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-content {
+        background-color: #111111;
+        padding: 20px;
+        text-align: center;
+        width: 40%;
+        color: #ffffff;
+        border: 1px solid #ffffff;
+    }
+
+    .modal-content h3 {
+        color: #800000; /* Dark red for modal heading */
+        margin-bottom: 15px;
+        font-size: 18px;
+        font-weight: 500;
+    }
+
+    .close {
+        color: #ffffff;
+        float: right;
+        font-size: 22px;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+
+    .close:hover,
+    .close:focus {
+        color: #800000; /* Dark red on hover */
+        cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        body {
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px;
+        }
+
+        .btn-cancel {
+            padding: 5px 12px;
+            font-size: 12px;
+        }
+
+        .payment-method {
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+
+        .modal-content {
+            width: 70%;
+        }
+
+        h2 {
+            font-size: 20px;
+            max-width: 250px;
+        }
+
+        .date-column {
+            min-width: 80px;
+        }
+
+        .booking-date-column {
+            min-width: 120px;
+        }
+        .show-time-column {
+            min-width: 120px;
+        }
+    }
+</style>
+
+<div class="container">
+    <br>
+    <br>
+    <h2>Booking Details</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Sl No</th>
+                <th>User Name</th>
+                <th>Movie Name</th>
+                <th>Date</th>
+                <th>Show Time</th>
+                <th>Seats</th>
+                <th>Payment Method</th>
+                <th>Booking Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ booking.fk_user.username }}</td>
+                    <td class="movie-name">{{ booking.movie_name }}</td>
+                    <td class="date-column">{{ booking.booking_date|date:"d-m-Y" }}</td>
+                    <td class="show-time-column">{{ booking.show_time }}</td>
+                    <td>
+                        <button class="btn-cancel" onclick="openModal('{{ booking.booking_id }}')">
+                            {{ booking.seats|length }} Seats
+                        </button>
+
+                        <!-- Modal Start -->
+                        <div class="modal" id="modal-{{ booking.booking_id }}">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeModal('{{ booking.booking_id }}')">×</span>
+                                <h3>Seats for {{ booking.movie_name }}</h3>
+                                <div>
+                                    {% for seat in booking.seats %}
+                                        <span class="payment-method">{{ seat.seat_number }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Modal End -->
+                    </td>
+                    <td>
+                        {% for method in booking.payment_methods %}
+                            <span class="payment-method">{{ method|title }}</span>
+                        {% endfor %}
+                    </td>
+                    <td class="booking-date-column">{{ booking.booking_date|date:"d-m-Y " }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- JavaScript for Modal -->
+<script>
+    function openModal(bookingId) {
+        var modal = document.getElementById('modal-' + bookingId);
+        modal.style.display = 'flex';
+    }
+
+    function closeModal(bookingId) {
+        var modal = document.getElementById('modal-' + bookingId);
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        var modals = document.querySelectorAll('.modal');
+        modals.forEach(function(modal) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+{% endblock %}
+
+
+{% comment %} {% extends 'theatre/theatre_layout.html' %}
 {% load static %}
 
 {% block content %}
 <style>
-    /* General Styling */
     body {
         background-color: #121212;
         color: #fff;
@@ -141,11 +420,12 @@
                 <th>Sl No</th>
                 <th>User Name</th>
                 <th>Movie Name</th>
-                <th>Date</th>
+                <th>Booked Date</th> <!-- ✅ Booking Date Added -->
                 <th>Show Time</th>
                 <th>Seats</th>
                 <th>Payment Method</th>
-                {% comment %} <th>Booking Date</th> {% endcomment %}
+                <th>Show Date</th> <!-- ✅ Show Date Added -->
+                
             </tr>
         </thead>
         <tbody>
@@ -154,7 +434,7 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ booking.fk_user.username }}</td>
                     <td class="movie-name">{{ booking.movie_name }}</td>
-                    <td>{{ booking.booking_date|date:"d-m-Y" }}</td>
+                    <td>{{ booking.show_date|date:"d-m-Y" }}</td>  <!-- ✅ Show Date Fixed -->
                     <td>{{ booking.show_time }}</td>
                     <td>
                         <button class="btn-cancel" onclick="openModal('{{ booking.booking_id }}')">
@@ -180,36 +460,32 @@
                             <span class="payment-method">{{ method|title }}</span>
                         {% endfor %}
                     </td>
-                    {% comment %} <td>{{ booking.booking_date|date:"d-m-Y h:i A" }}</td> {% endcomment %}
+                    <td>{{ booking.booking_date|date:"d-m-Y" }}</td>  <!-- ✅ Correct Booked Date -->
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- JavaScript for Modal -->
 <script>
     function openModal(bookingId) {
-        var modal = document.getElementById('modal-' + bookingId);
-        modal.style.display = 'flex';
+        document.getElementById('modal-' + bookingId).style.display = 'flex';
     }
 
     function closeModal(bookingId) {
-        var modal = document.getElementById('modal-' + bookingId);
-        modal.style.display = 'none';
+        document.getElementById('modal-' + bookingId).style.display = 'none';
     }
 
     window.onclick = function(event) {
-        var modals = document.querySelectorAll('.modal');
-        modals.forEach(function(modal) {
-            if (event.target == modal) {
-                modal.style.display = 'none';
-            }
+        document.querySelectorAll('.modal').forEach(function(modal) {
+            if (event.target == modal) modal.style.display = 'none';
         });
     }
 </script>
 
-{% endblock %}
+{% endblock %} {% endcomment %}
+
+
 
 
 
