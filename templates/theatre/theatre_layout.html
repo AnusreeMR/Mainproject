@@ -22,7 +22,7 @@
       <!-- partial:partials/_sidebar.html -->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <div class="sidebar-brand-wrapper d-none d-lg-flex align-items-center justify-content-center fixed-top">
-          <h3><a class="text-white" href="index.html"><i class="fa fa-video-camera col_red me-1"></i>FilmTix</a></h3>
+          <img src="{% static 'logo/tlogo.png' %}" alt="FilmTix Logo" style="width: 150px; height: auto;">
           {% comment %} <a class="sidebar-brand brand-logo" href="index.html"><img src="{% static 'theatre_admin/images/logo.svg'%}" alt="logo" /></a> {% endcomment %}
           <a class="sidebar-brand brand-logo-mini" href="index.html"><img src="{% static 'theatre_admin/images/logo-mini.svg'%}" alt="logo" /></a>
         </div>
@@ -30,8 +30,8 @@
           <li class="nav-item profile">
             <div class="profile-desc">
               <div class="profile-pic">
-                <div class="count-indicator">
-                  <img class="img-xs rounded-circle " src="{% static 'theatre_admin/images/faces/face15.jpg' %}" alt="">
+                <div>
+                  {% comment %} <img class="img-xs rounded-circle " src="{% static 'theatre_admin/images/faces/face15.jpg' %}" alt=""> {% endcomment %}
                   <span class="count bg-success"></span>
                 </div>
                 <div class="profile-name">
@@ -125,8 +125,8 @@
         </a>
         <div class="collapse" id="complaints-menu">
             <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="#">Send</a></li>
-                <li class="nav-item"> <a class="nav-link" href="#">View</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'theatre_to_admin_complaints' %}">Send To Admin</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{% url 'list_user_complaints_to_theatre' %}">User Complaints</a></li>
             </ul>
         </div>
     </li>
@@ -202,13 +202,13 @@
             <button class="navbar-toggler navbar-toggler align-self-center" type="button" data-toggle="minimize">
               <span class="mdi mdi-menu"></span>
             </button>
-            <ul class="navbar-nav w-100">
+            {% comment %} <ul class="navbar-nav w-100">
               <li class="nav-item w-100">
                 <form class="nav-link mt-2 mt-md-0 d-none d-lg-flex search">
                   <input type="text" class="form-control" placeholder="Search">
                 </form>
               </li>
-            </ul>
+            </ul> {% endcomment %}
             <ul class="navbar-nav navbar-nav-right">
               <li class="nav-item dropdown">
                 <a class="nav-link" id="profileDropdown" href="#" data-toggle="dropdown">
