@@ -41,20 +41,9 @@ urlpatterns = [
 
     path('theatre_layout/',the_gg, name='theatre_layout'),
 
-   
 
 
 
-
-
-    path('book-seat/', book_seat, name='book_seat'),
-    path('seat-booking/<int:showtime_id>/', seat_booking, name='seat_booking'),
-    path('booking-history/',booking_history, name='booking_history'),
-    path("cancel-booking/", cancel_booking, name="cancel_booking"),
-
-    path('theatre-admin/bookings/', theatre_admin_bookings, name='theatre_admin_bookings'),
-    path('theatre-admin/bookings/approve/<int:booking_id>/', approve_cancellation, name='approve_cancellation'),
-    
 
     path('theatre-admin/bookings-details/', theatre_admin_bookings_details, name='theatre_admin_bookings_details'),
     path('theatre-admin/theatre_x/', theatre_x, name='theatre_x'),
@@ -62,6 +51,51 @@ urlpatterns = [
     path('movies_list_x/', movies_list_x, name='movies_list_x'),
     path('movies_list_x/<int:movie_id>/', movie_detail_x, name='movie_detail_x'),
 
+    path('submit_rating/', submit_rating, name='submit_rating'),
+    path('submit_comment/', submit_comment, name='submit_comment'),
+
+
+
+    path('delete-comment/<int:rating_id>/', delete_comment, name='delete_comment'),
+    path('delete-rating/<int:rating_id>/', delete_rating, name='delete_rating'),
+
+
+    ##################  Complaints ###########################
+
+    path('complaints/', user_complaints, name='user_complaints'),
+    path('admin-complaints/', admin_complaints, name='admin_complaints'),
+    path('theatre_to_admin_complaints/', theatre_to_admin_complaints, name='theatre_to_admin_complaints'),
+    path('list_theatre_to_admin_complaints_list/', list_theatre_to_admin_complaints_list, name='list_theatre_to_admin_complaints_list'),
+
+
+#########################################################
+
+    path('theatre-complaints/', user_theatre_complaints, name='user_theatre_complaints'),
+    path('list_user_complaints_to_theatre/', list_user_complaints_to_theatre, name='list_user_complaints_to_theatre'),
+
+
+
+    path('book-seat/', book_seat, name='book_seat'),
+    path('seat-booking/<int:showtime_id>/', seat_booking, name='seat_booking'),
+
+    path('booking-history/',booking_history, name='booking_history'),
+    path("cancel-booking/<int:booking_id>/", cancel_booking, name="cancel_booking"),
+
+    path('theatre-admin/bookings/', theatre_admin_bookings, name='theatre_admin_bookings'),
+    path('theatre-admin/bookings/approve/<int:booking_id>/', approve_cancellation, name='approve_cancellation'),
+
+    ###############################################################################
+
+    path('theatres/', user_theatre_list, name='user_theatre_list'),
+    path('submit-theatre-rating/', submit_theatre_rating, name='submit_theatre_rating'),
+
+
+    path('admin_view_theatre_reating/', admin_view_theatre_rating, name='admin_view_theatre_reating'),
+    path('admin_movie-ratings/', admin_view_movie_rating, name='admin_view_movie_rating'),
+
+
+    path('generate-seats/', generate_seats, name='generate_seats'),
+    
 ]
 
 

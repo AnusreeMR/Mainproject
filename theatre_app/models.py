@@ -102,7 +102,7 @@ from django.db import models
 
 class ShowTime(models.Model):
     fk_movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='showtimes')
-    show_time = models.CharField(max_length=10)  # Example: "10:00 AM", "7:00 PM"
+    show_time = models.TimeField(max_length=10)  # Example: "10:00 AM", "7:00 PM"
 
     def __str__(self):
         return f"{self.fk_movie.movie_name} - {self.show_time}"
@@ -143,3 +143,57 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"{self.fk_user.username} booked {self.fk_seat.seat_number}"
+    
+
+
+
+    #################################################
+
+class Rating(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='ratings')
+    rating = models.IntegerField(default=0)  # Rating out of 5
+    comment = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.movie.movie_name} {self.rating}/5"
+    
+
+####################################################################################################
+
+class Complaint(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    message = models.TextField()
+    reply = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def _str_(self):
+        return f"Complaint by {self.user.username}"
+    
+
+#####################################################################################
+
+class TheatreComplaint(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    theatre = models.ForeignKey(Theatre_Profile, on_delete=models.CASCADE)
+    message = models.TextField()
+    reply = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Complaint by {self.user.username} to {self.theatre.fk_user.username}"
+    
+
+###########################################################################
+
+class Theatre_Rating(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    theatre = models.ForeignKey(Theatre_Profile, on_delete=models.CASCADE, related_name='tratings')
+    rating = models.IntegerField(default=0)  # Rating out of 5
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.theatre.name} {self.rating}/5"

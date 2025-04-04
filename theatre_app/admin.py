@@ -56,8 +56,6 @@ class TheatreProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(Movie)
 
-
-
 from django.contrib import admin
 from .models import Booking
 
@@ -83,3 +81,36 @@ class ShowtimeDateAdmin(admin.ModelAdmin):
     list_display = ("showtime", "date")  # Display showtime and date
     list_filter = ("date", "showtime__fk_movie")  # Filter by date and movie
     search_fields = ("showtime__fk_movie__movie_name", "date")  # Search by movie name and date
+
+
+###########################################
+from django.contrib import admin
+from .models import Complaint, TheatreComplaint
+
+@admin.register(Complaint)
+class ComplaintAdmin(admin.ModelAdmin):
+    list_display = ('user', 'message_preview', 'reply_preview', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('user__username', 'message')
+
+    def message_preview(self, obj):
+        return obj.message[:50] + "..." if len(obj.message) > 50 else obj.message
+    message_preview.short_description = "Message"
+
+    def reply_preview(self, obj):
+        return obj.reply[:50] + "..." if obj.reply and len(obj.reply) > 50 else obj.reply
+    reply_preview.short_description = "Reply"
+
+@admin.register(TheatreComplaint)
+class TheatreComplaintAdmin(admin.ModelAdmin):
+    list_display = ('user', 'theatre', 'message_preview', 'reply_preview', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at', 'theatre')
+    search_fields = ('user__username', 'theatre__fk_user__username', 'message')
+
+    def message_preview(self, obj):
+        return obj.message[:50] + "..." if len(obj.message) > 50 else obj.message
+    message_preview.short_description = "Message"
+
+    def reply_preview(self, obj):
+        return obj.reply[:50] + "..." if obj.reply and len(obj.reply) > 50 else obj.reply
+    reply_preview.short_description = "Reply"
