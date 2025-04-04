@@ -109,7 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -136,6 +136,6 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'sumithrobin12345@gmail.com'  # Your email address
-EMAIL_HOST_PASSWORD = 'kizy ouhk ppaw tajn'  # App password
+EMAIL_HOST_USER = 'anus87647@gmail.com'  # Your email address
+EMAIL_HOST_PASSWORD = 'iczr qbku zgxk fqsj'  # App password
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
