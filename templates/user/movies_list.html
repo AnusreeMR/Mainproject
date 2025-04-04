@@ -1,5 +1,4 @@
 {% extends 'user/user_layout.html' %}
-
 {% load static %}
 
 {% block content %}
@@ -9,7 +8,7 @@
         <!-- Search Bar -->
         <div class="row mb-4">
             <div class="col-md-6 offset-md-3">
-                <form method="GET" action="{% url 'movies_list_x' %}#aa" class="input-group">
+                <form method="GET" action="{% url 'movies_list_x' %}" class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Search Movies..." value="{{ query }}">
                     <button type="submit" class="btn btn-primary">Search</button>
                 </form>
@@ -34,9 +33,9 @@
             <div class="col-md-3 col-6 mb-4">
                 <div class="trend_2im clearfix position-relative">
                     <div class="trend_2im1 clearfix">
-                        <div class="grid" id="aa">
+                        <div class="grid">
                             <figure class="effect-jazz mb-0">
-                                <a href="{% url 'movie_detail_x' movie.id %}#bb">
+                                <a href="{% url 'movie_detail_x' movie.id %}">
                                     <img src="{{ movie.movie_image.url }}" class="w-100" alt="{{ movie.movie_name }}" style="height: 250px; object-fit: cover; border-radius: 10px;">
                                 </a>
                             </figure>
@@ -50,17 +49,121 @@
                         </a>
                     </h5>
                     <p class="mb-2">{{ movie.movie_language }}</p>
-                </div>
-            </div>
 
-            <!-- Movie Trailer Modal -->
-            <div class="modal fade" id="trailerModal{{ movie.id }}" tabindex="-1" aria-labelledby="trailerModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="trailerModalLabel">{{ movie.movie_name }} - Trailer</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
+                    {% if request.user.is_authenticated %}
+                        <!-- Rating Form -->
+                        <form method="post" action="{% url 'submit_rating' %}" class="mt-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="movie_id" value="{{ movie.id }}">
+
+                            <!-- Star Rating Input -->
+                            <div class="rating mb-2">
+                                <input type="radio" name="rating" value="5" id="star5-{{ movie.id }}"><label for="star5-{{ movie.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="4" id="star4-{{ movie.id }}"><label for="star4-{{ movie.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="3" id="star3-{{ movie.id }}"><label for="star3-{{ movie.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="2" id="star2-{{ movie.id }}"><label for="star2-{{ movie.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="1" id="star1-{{ movie.id }}"><label for="star1-{{ movie.id }}">&#9733;</label>
+                            </div>
+                            <button type="submit" 
+                            style="width: 40px; height: 20px; 
+                            background-color: #be0606; border: none; 
+                            border-radius: 5px; color: white; 
+                            text-align: center; line-height: 20px;">
+                            <i class="fa fa-check" style="font-size: 12px;"></i>
+                        </button>
+                        
+                                                      
+                        </form>
+
+                        <!-- Comment Form -->
+                        <form method="post" action="{% url 'submit_comment' %}" class="mt-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="movie_id" value="{{ movie.id }}">
+
+                            <!-- Comment Input -->
+                            <div class="mb-2">
+                                <textarea name="comment" class="form-control" rows="2" placeholder="Add your reviews..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm">Submit Comment</button>
+                        </form>
+                    {% else %}
+                        <p class="text-muted"><a href="{% url 'login' %}">Login</a> to rate and review.</p>
+                    {% endif %}
+
+                    <!-- Buttons to Show Comments and Ratings -->
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-primary toggle-comments" data-movie="{{ movie.id }}">Comment List</button>
+                        <button class="btn btn-sm btn-success toggle-ratings" data-movie="{{ movie.id }}">Rating List</button>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section mt-2" id="comments-{{ movie.id }}" style="display: none;">
+                        {% for rating in movie.ratings.all %}
+                            {% if rating.comment %}
+                                <div class="card mb-2">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-1" style="position: relative;">
+                                            <span style="color: black; font-size: 15px;">
+                                                
+                                            </span>
+                                            <span style="font-size: 12px; float: right; color: gray;">
+                                                {{ rating.created_at|date:"M d, Y" }}
+                                            </span>
+                                        </h6>
+                                        
+                                        <p class="card-text mb-1">
+                                            <span style="color: black;font-size: 15px;float: left;"><b>{{ rating.user.username }} </b>: "{{ rating.comment }}"</span>
+                                        </p>
+
+                                        <!-- Delete Comment Button -->
+                                        {% if rating.user == request.user %}
+                                        <form method="post" action="{% url 'delete_comment' rating.id %}">
+                                            {% csrf_token %}
+                                            <div style="position: relative; padding-right: 30px;">
+                                                <span style="font-size: 15px; color: black;"></span>
+                                                <button type="submit" 
+                                                    style="position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+                                                           background: none; border: none; padding: 5px; cursor: pointer;margin-top: 22px;">
+                                                    <i class="fa fa-trash" style="font-size: 15px; color: #be0606;margin-bottom: 12px;"></i>
+                                                </button>
+                                            </div>
+                                                                                  
+                                        </form>
+                                    {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <!-- Ratings Section -->
+                    <div class="ratings-section mt-2" id="ratings-{{ movie.id }}" style="display: none;">
+                        {% for rating in movie.ratings.all %}
+                            <div class="card mb-2">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title mb-1">
+                                        <span style="color: black;float: left;font-size: 12px;">{{ rating.user.username }} rated ({{ rating.rating }}/5)  
+                                            <span style="float: right;margin-left: 50px;">{{ rating.created_at|date:"M d, Y" }}</span>
+                                        </span>
+                                    </h6><br>
+                                    <!-- Delete Rating Button -->
+                                    {% if rating.user == request.user %}
+                                    <form method="post" action="{% url 'delete_rating' rating.id %}">
+                                        {% csrf_token %}
+                                        <div style="position: relative; padding-right: 30px;">
+                                            <span style="font-size: 15px; color: black;"></span>
+                                            <button type="submit" 
+                                                style="position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+                                                       background: none; border: none; padding: 5px; cursor: pointer;
+                                                       margin-left: 300px;">
+                                                <i class="fa fa-trash" style="font-size: 15px; color: #be0606;"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -68,5 +171,58 @@
         </div>
     </div>
 </section>
+
+<!-- JavaScript to Toggle Comments and Ratings -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".toggle-comments").forEach(button => {
+            button.addEventListener("click", function() {
+                let movieId = this.getAttribute("data-movie");
+                let commentsSection = document.getElementById("comments-" + movieId);
+                let ratingsSection = document.getElementById("ratings-" + movieId);
+                
+                if (ratingsSection.style.display === "block") {
+                    ratingsSection.style.display = "none";
+                }
+                
+                commentsSection.style.display = (commentsSection.style.display === "block") ? "none" : "block";
+            });
+        });
+
+        document.querySelectorAll(".toggle-ratings").forEach(button => {
+            button.addEventListener("click", function() {
+                let movieId = this.getAttribute("data-movie");
+                let commentsSection = document.getElementById("comments-" + movieId);
+                let ratingsSection = document.getElementById("ratings-" + movieId);
+
+                if (commentsSection.style.display === "block") {
+                    commentsSection.style.display = "none";
+                }
+                
+                ratingsSection.style.display = (ratingsSection.style.display === "block") ? "none" : "block";
+            });
+        });
+    });
+</script>
+
+<!-- CSS for Star Rating -->
+<style>
+    .rating {
+        direction: rtl;
+        unicode-bidi: bidi-override;
+        display: inline-flex;
+    }
+    .rating input {
+        display: none;
+    }
+    .rating label {
+        font-size: 25px;
+        color: grey;
+        cursor: pointer;
+    }
+    .rating input:checked ~ label {
+        color: gold;
+    }
+</style>
 
 {% endblock %}

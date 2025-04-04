@@ -1,0 +1,454 @@
+{% extends 'user/seat_layout.html' %}
+{% block content %}
+<style>
+    body {
+        background-color: #121212;
+        color: white;
+    }
+
+    .table-container {
+        width: 100%;
+        margin: auto;
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background: #1e1e1e;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #444;
+    }
+
+    th {
+        background: #2a2a72;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background: #252525;
+    }
+
+    tr:hover {
+        background: #333;
+        transition: 0.3s;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+    }
+
+    .btn-warning {
+        background-color: #ffc107;
+        border: none;
+        color: black;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
+
+</style>
+
+<div class="container mt-4">
+    <h2 class="text-center">🎟️ Booking History</h2>
+
+    {% if grouped_bookings %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>🎬 Movie Name</th>
+                        <th>🕒 Show Time</th>
+                        <th>📅 Show Date</th>
+                        <th>🎟️ Seats Booked</th>
+                        <th>❌ Cancel Seat</th>
+                        <th>📝 Booking Type</th>
+                        <th>💳 Payment Method</th>
+                        <th>💰 Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, details in grouped_bookings.items %}
+                        <tr>
+                            <td>{{ details.movie_name }}</td>
+                            <td>{{ details.show_time }}</td>
+                            <td>
+                                {% if details.show_date %}
+                                    {{ details.show_date|date:"d-m-Y" }}
+                                {% else %}
+                                    Date not available
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for booking in details.bookings %}
+                                    Seat {{ booking.fk_seat.seat_number }}<br>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for booking in details.bookings %}
+                                    {% if booking.booking_type == "flexi" %}
+                                        {% if booking.is_cancelled %}
+                                            <span class="text-danger">Cancelled</span><br>
+                                        {% elif booking.cancellation_status == "pending" %}
+                                            <span class="text-warning">Pending</span><br>
+                                        {% elif booking.cancellation_status == "approved" %}
+                                            <span class="text-success">Approved</span><br>
+                                        {% elif details.is_expired %}
+                                            <span class="text-muted">Expired</span><br>
+                                        {% else %}
+                                            <button class="btn btn-sm btn-danger cancel-btn mt-1" data-booking-id="{{ booking.id }}">
+                                                Cancel Seat
+                                            </button>
+                                            <div class="cancel-form d-none mt-2">
+                                                <input type="text" class="cancel-reason" placeholder="Reason for cancellation">
+                                                <button class="btn btn-warning submit-cancel" data-booking-id="{{ booking.id }}">Submit</button>
+                                            </div><br>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ details.bookings.0.booking_type|title }}</td>
+                            <td>
+                                {% if details.bookings.0.payment_method == "gpay" %} Google Pay
+                                {% elif details.bookings.0.payment_method == "phonepe" %} PhonePe
+                                {% elif details.bookings.0.payment_method == "paytm" %} Paytm
+                                {% else %} {{ details.bookings.0.payment_method|title }}
+                                {% endif %}
+                            </td>
+                            <td>₹{{ details.total_amount }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-center">You have no booking history.</p>
+    {% endif %}
+</div>
+
+{% comment %} Hidden CSRF token input {% endcomment %}
+<input type="hidden" id="csrf_token" value="{{ csrf_token }}">
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Show the cancellation form when clicking the cancel button
+    document.querySelectorAll(".cancel-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const form = this.nextElementSibling;
+            form.classList.toggle("d-none");
+        });
+    });
+
+    // Handle seat cancellation request
+    document.querySelectorAll(".submit-cancel").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const bookingId = this.dataset.bookingId;
+            const reasonInput = this.previousElementSibling;
+            const reason = reasonInput.value;
+            const csrfToken = document.getElementById("csrf_token").value;
+
+            if (!reason.trim()) {
+                alert("Please provide a reason for cancellation.");
+                return;
+            }
+
+            fetch(`/cancel-booking/${bookingId}/`, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrfToken,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ reason: reason }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Booking cancelled successfully!");
+                    location.reload();
+                } else {
+                    alert("Failed to cancel booking. Please try again.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    });
+});
+</script>
+
+{% endblock %}
+
+
+
+{% comment %} {% extends 'user/seat_layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <center><h2 style="color: white;">Booking History</h2></center>
+<br>
+    {% if grouped_bookings %}
+        <div class="row">
+            {% for key, details in grouped_bookings.items %}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-lg">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color:black;">
+                                🎬 {{ details.movie_name }}
+                            </h5>
+
+                            <p style="color:black;">
+                                <strong>Show Time:</strong> 🕒 {{ details.show_time }} - 📅
+                                {% if details.show_date %}
+                                    {{ details.show_date|date:"d-m-Y" }}
+                                {% else %}
+                                    Date not available
+                                {% endif %}
+                            </p>
+
+                            <p class="card-text" style="color:black;">
+                                <strong>Seats Booked:</strong>
+                                <ul>
+                                    {% for booking in details.bookings %}
+                                        <li style="color:black;">
+                                            Seat {{ booking.fk_seat.seat_number }}
+                                            
+                                            {% if booking.booking_type == "flexi" %}
+                                                {% if booking.is_cancelled %}
+                                                    <span class="text-danger">Cancelled</span>
+                                                {% elif booking.cancellation_status == "pending" %}
+                                                    <span class="text-warning">Cancellation Pending</span>
+                                                {% elif booking.cancellation_status == "approved" %}
+                                                    <span class="text-success">Cancellation Approved</span>
+                                                {% elif details.is_expired %}
+                                                    <span class="text-muted">Expired</span>
+                                                {% elif details.show_cancel_button %}
+                                                    <button class="btn btn-sm btn-danger cancel-btn mt-1" data-booking-id="{{ booking.id }}">
+                                                        Cancel
+                                                    </button>
+                                                    <div class="cancel-form d-none mt-2">
+                                                        <textarea class="form-control cancel-reason" placeholder="Enter cancellation reason"></textarea>
+                                                        <button class="btn btn-warning btn-sm mt-2 submit-cancel" data-booking-id="{{ booking.id }}">
+                                                            Submit Cancellation
+                                                        </button>
+                                                    </div>
+                                                {% endif %}
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </p>
+
+                            <p style="color:black;">
+                                <strong>Booking Type:</strong> {{ details.bookings.0.booking_type|title }}<br>
+                                <strong>Payment Method:</strong>
+                                {% with details.bookings.0.payment_method as payment_method %}
+                                    {% if payment_method == "gpay" %}Google Pay
+                                    {% elif payment_method == "phonepe" %}PhonePe
+                                    {% elif payment_method == "paytm" %}Paytm
+                                    {% else %}{{ payment_method|title }}
+                                    {% endif %}
+                                {% endwith %}
+                            </p>
+
+                            <p class="card-text" style="color:black;">
+                                <strong>Total Amount:</strong> ₹{{ details.total_amount }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: black;">You have no booking history.</p>
+    {% endif %}
+</div>
+
+<!-- JavaScript to handle cancellation -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".cancel-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const form = this.nextElementSibling;
+                form.classList.toggle("d-none");
+            });
+        });
+
+        document.querySelectorAll(".submit-cancel").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const bookingId = this.dataset.bookingId;
+                const reason = this.previousElementSibling.value;
+
+                if (!reason.trim()) {
+                    alert("Please provide a reason for cancellation.");
+                    return;
+                }
+
+                fetch(`/cancel-booking/${bookingId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ reason: reason }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Cancellation submitted successfully! Status will be updated soon.");
+                        location.reload();  // Reload the page to update the status
+                    } else {
+                        alert("Failed to submit cancellation. Please try again.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} {% endcomment %}
+
+
+
+
+
+
+{% comment %} {% extends 'user/seat_layout.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 style="color: black;">Booking History</h2>
+
+    {% if grouped_bookings %}
+        <div class="row">
+            {% for booking_date, details in grouped_bookings.items %}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-lg">
+                        <div class="card-body">
+                            <h5 class="card-title" style="color:black;">
+                                🎬 {{ details.movie_name }}
+                            </h5>
+
+                            <p style="color:black;">
+                                <strong>Show Time:</strong> 🕒 {{ details.show_time }} - 📅
+                                {% if details.show_date %}
+                                    {{ details.show_date|date:"d-m-Y" }}
+                                {% else %}
+                                    Date not available
+                                {% endif %}
+                            </p>
+
+                            <p class="card-text" style="color:black;">
+                                <strong>Seats Booked:</strong>
+                                <ul>
+                                    {% for booking in details.bookings %}
+                                        <li style="color:black;">
+                                            Seat {{ booking.fk_seat.seat_number }}
+                                            {% if booking.booking_type == "flexi" and not booking.is_cancelled and details.show_cancel_button %}
+                                                <button class="btn btn-sm btn-danger cancel-btn mt-1" data-booking-id="{{ booking.id }}">
+                                                    Cancel
+                                                </button>
+                                                <div class="cancel-form d-none mt-2">
+                                                    <textarea class="form-control cancel-reason" placeholder="Enter cancellation reason"></textarea>
+                                                    <button class="btn btn-warning btn-sm mt-2 submit-cancel" data-booking-id="{{ booking.id }}">
+                                                        Submit Cancellation
+                                                    </button>
+                                                </div>
+                                            {% elif booking.is_cancelled %}
+                                                <span class="text-danger">Cancelled</span>
+                                            {% else %}
+                                                <span class="text-muted">Booking expired</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </p>
+
+                            <p style="color:black;">
+                                <strong>Booking Type:</strong> {{ details.bookings.0.booking_type|title }}<br>
+                                <strong>Payment Method:</strong>
+                                {% with details.bookings.0.payment_method as payment_method %}
+                                    {% if payment_method == "gpay" %}Google Pay
+                                    {% elif payment_method == "phonepe" %}PhonePe
+                                    {% elif payment_method == "paytm" %}Paytm
+                                    {% else %}{{ payment_method|title }}
+                                    {% endif %}
+                                {% endwith %}
+                            </p>
+
+                            <p class="card-text" style="color:black;">
+                                <strong>Total Amount:</strong> ₹{{ details.total_amount }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color: black;">You have no booking history.</p>
+    {% endif %}
+</div>
+
+<!-- JavaScript to handle cancellation -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".cancel-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const bookingId = this.dataset.bookingId;
+                const form = this.nextElementSibling;
+                form.classList.toggle("d-none");
+            });
+        });
+
+        document.querySelectorAll(".submit-cancel").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const bookingId = this.dataset.bookingId;
+                const reason = this.previousElementSibling.value;
+
+                if (!reason.trim()) {
+                    alert("Please provide a reason for cancellation.");
+                    return;
+                }
+
+                fetch(`/cancel-booking/${bookingId}/`, {
+                    method: "POST",
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ reason: reason }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert("Booking cancelled successfully!");
+                        location.reload();
+                    } else {
+                        alert("Failed to cancel booking. Please try again.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} {% endcomment %}

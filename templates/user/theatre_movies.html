@@ -4,7 +4,6 @@
 
 {% block content %}
 
-<h2>Movies in {{ theatre.fk_user.username }}</h2>
 
 <section id="popular" class="pt-4 pb-5 bg_grey">
     <div class="container">
@@ -13,7 +12,7 @@
                 <div class="trend_1l">
                     <h4 class="mb-0">
                         <i class="fa fa-youtube-play align-middle col_red me-1"></i>
-                        Movies in <span class="col_red">{{ theatre.fk_user.username }}</span>
+                        Movies in <span>{{ theatre.fk_user.username }}</span>
                     </h4>
                 </div>
             </div>
@@ -41,14 +40,14 @@
                                                     </div>
                                                 </div>
                                                 <div class="popular_2i1lm2 position-absolute top-0 w-100 text-center clearfix">
-                                                    <ul>
+                                                    {% comment %} <ul>
                                                         <li class="d-inline-block">
                                                             <a href="#"><i class="fa fa-link col_red"></i></a>
                                                         </li>
                                                         <li class="d-inline-block">
                                                             <a href="#"><i class="fa fa-search col_red"></i></a>
                                                         </li>
-                                                    </ul>
+                                                    </ul> {% endcomment %}
                                                 </div>
                                             </div>
                                         </div>
@@ -77,8 +76,9 @@
                                             <div class="showtimes-container">
                                                 {% for showtime in entry.showtimes %}
                                                 <a href="{% url 'seat_booking' showtime.id %}" class="showtime-box">
-                                                    <i class="fa fa-clock-o me-1"></i> {{ showtime }}
+                                                    <i class="fa fa-clock-o me-1"></i> {{ showtime.show_time }}
                                                 </a>
+                                                
                                                 {% empty %}
                                                 <p class="text-muted text-center">No showtimes available.</p>
                                                 {% endfor %}
@@ -158,6 +158,218 @@ a {
 {% endblock %}
 
 
+
+
+{% comment %} {% extends 'user/user_layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<section id="popular" class="pt-4 pb-5 bg_grey">
+    <div class="container">
+        <div class="row trend_1">
+            <div class="col-md-12">
+                <div class="trend_1l">
+                    <h4 class="mb-0">
+                        <i class="fa fa-youtube-play align-middle col_red me-1"></i>
+                        Movies in <span>{{ theatre.fk_user.username }}</span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="popular_2 row mt-4">
+            <div class="tab-content">
+                <div class="tab-pane active" id="home">
+                    <div class="popular_2i row">
+                        {% for entry in movies_with_showtimes %}
+                        <div class="col-md-12">
+                            <div class="row">
+                                <!-- Left Side: Movie Image & Details -->
+                                <div class="col-md-6">
+                                    <div class="popular_2i1 row">
+                                        <div class="col-md-4 col-4">
+                                            <div class="popular_2i1lm position-relative clearfix">
+                                                <div class="popular_2i1lm1 clearfix">
+                                                    <div class="grid"><br>
+                                                        <figure class="effect-jazz mb-0">
+                                                            <a href="#">
+                                                                <img src="{{ entry.movie.movie_image.url }}" class="w-100 movie-image" alt="{{ entry.movie.movie_name }}">
+                                                            </a>
+                                                        </figure>
+                                                    </div>
+                                                </div>
+                                                <div class="popular_2i1lm2 position-absolute top-0 w-100 text-center clearfix">
+                                                    <ul>
+                                                        <li class="d-inline-block">
+                                                            <a href="#"><i class="fa fa-link col_red"></i></a>
+                                                        </li>
+                                                        <li class="d-inline-block">
+                                                            <a href="#"><i class="fa fa-search col_red"></i></a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8 col-8">
+                                            <div class="popular_2i1r"><br>
+                                                <h5><a class="col_red" href="#">{{ entry.movie.movie_name }}</a></h5>
+                                                <h6>{{ entry.movie.movie_genre }}, {{ entry.movie.movie_language }}</h6>
+                                                <h6>
+                                                    Year: {{ entry.movie.movie_release_date.year }} 
+                                                    <span class="ms-2">Runtime: {{ entry.movie.movie_duration }} Min</span>
+                                                </h6>
+                                                <p>{{ entry.movie.movie_description|truncatechars:100 }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Side: Showtimes List -->
+                                <div class="col-md-6"><br>
+                                    <div class="card border-0 showtime-card">
+                                        <div class="card-header text-center" style="background-color:rgb(0, 0, 0);">
+                                            <br><h5 class="card-title" style="color: red;">Showtimes</h5>
+                                        </div>
+
+                                        <div class="card-body">
+                                            <div class="screens-container text-center">
+                                                {% for screen_number in entry.showtimes_by_screen.keys %}
+                                                    <button class="screen-btn {% if screen_number == entry.default_screen %}active{% endif %}" 
+                                                            data-movie-id="{{ entry.movie.id }}" 
+                                                            data-screen="{{ screen_number }}">
+                                                        Screen {{ screen_number }}
+                                                    </button>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="showtimes-container mt-3" id="showtimes-{{ entry.movie.id }}">
+                                                {% for screen_number, showtimes in entry.showtimes_by_screen.items %}
+                                                    <div class="showtime-list" id="showtimes-{{ entry.movie.id }}-{{ screen_number }}" 
+                                                         {% if screen_number != entry.default_screen %}style="display: none;"{% endif %}>
+                                                        {% for showtime in showtimes %}
+                                                        <a href="{% url 'seat_booking' showtime.id %}" class="showtime-box">
+                                                            <i class="fa fa-clock-o me-1"></i> {{ showtime.show_time }}
+                                                        </a>
+                                                        {% empty %}
+                                                        <p class="text-muted text-center">No showtimes available.</p>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                        <p class="text-center">No movies available for this theatre.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ✅ CSS Styling -->
+<style>
+.movie-image {
+    height: 220px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* ✅ Card Styling */
+.showtime-card {
+    background-color: rgb(0, 0, 0);
+    color: white;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+/* ✅ Screens Button Styling */
+.screens-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.screen-btn {
+    background-color: black;
+    color: white;
+    border: 1px solid red;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.screen-btn.active,
+.screen-btn:hover {
+    background-color: red;
+    color: white;
+}
+
+/* ✅ Showtimes Styling */
+.showtimes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.showtime-box {
+    color: red;
+    text-decoration: none;
+    border: 1px solid red;
+    padding: 10px 15px;
+    text-align: center;
+    border-radius: 5px;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 100px;
+    display: inline-block;
+    background: transparent;
+}
+
+.showtime-box:hover {
+    background-color: red;
+    color: white;
+    box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+    transform: scale(1.05);
+}
+</style>
+
+<!-- ✅ JavaScript for Screen Selection -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".screen-btn").forEach(button => {
+        button.addEventListener("click", function() {
+            let movieId = this.dataset.movieId;
+            let screen = this.dataset.screen;
+
+            // Hide all showtime lists for this movie
+            document.querySelectorAll(`#showtimes-${movieId} .showtime-list`).forEach(list => {
+                list.style.display = "none";
+            });
+
+            // Show the selected screen's showtimes
+            document.getElementById(`showtimes-${movieId}-${screen}`).style.display = "block";
+
+            // Update active button
+            this.parentElement.querySelectorAll(".screen-btn").forEach(btn => btn.classList.remove("active"));
+            this.classList.add("active");
+        });
+    });
+});
+</script>
+
+{% endblock %} {% endcomment %}
 
 
 

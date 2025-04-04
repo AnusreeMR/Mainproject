@@ -1,0 +1,66 @@
+{% extends 'user/user_layout.html' %}
+{% load static %}
+
+{% block content %}
+
+<section id="theatres" class="pt-4 pb-5">
+    <div class="container">
+        <h4 class="mb-4">Theatres</h4>
+        
+        <div class="row">
+            {% for theatre in theatres %}
+            <div class="col-md-4 col-6 mb-4">
+                <div class="card" style="background-color: black;border-color: gold;">
+                    <div class="card-body text-center">
+                        <h5 class="card-title" style="color: rgb(255, 255, 255);">{{ theatre.fk_user.username }}</h5>
+                        <p class="card-text" style="color: rgb(45, 175, 5);">⭐ {{ theatre.avg_rating|floatformat:1 }}/5</p>
+                        <p class="card-text" style="color: rgb(190, 2, 2);">{{ theatre.location }}</p>
+
+                        {% if request.user.is_authenticated %}
+                        <!-- Rating Form -->
+                        <form method="post" action="{% url 'submit_theatre_rating' %}" class="mt-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="theatre_id" value="{{ theatre.id }}">
+
+                            <div class="rating mb-2">
+                                <input type="radio" name="rating" value="5" id="star5-{{ theatre.id }}"><label for="star5-{{ theatre.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="4" id="star4-{{ theatre.id }}"><label for="star4-{{ theatre.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="3" id="star3-{{ theatre.id }}"><label for="star3-{{ theatre.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="2" id="star2-{{ theatre.id }}"><label for="star2-{{ theatre.id }}">&#9733;</label>
+                                <input type="radio" name="rating" value="1" id="star1-{{ theatre.id }}"><label for="star1-{{ theatre.id }}">&#9733;</label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-sm btn-primary">Rate</button>
+                        </form>
+                        {% else %}
+                        <p><a href="{% url 'login' %}">Login</a> to rate this theatre.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CSS for Star Rating -->
+<style>
+    .rating {
+        direction: rtl;
+        unicode-bidi: bidi-override;
+        display: inline-flex;
+    }
+    .rating input {
+        display: none;
+    }
+    .rating label {
+        font-size: 25px;
+        color: rgb(228, 225, 225);
+        cursor: pointer;
+    }
+    .rating input:checked ~ label {
+        color: gold;
+    }
+</style>
+
+{% endblock %}

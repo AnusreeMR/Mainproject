@@ -1,0 +1,260 @@
+{% extends 'user/seat_layout.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">Seat Booking for {{ showtime.fk_movie.movie_name }}</h2>
+    <p>Showtime: {{ showtime.show_time }}</p>
+
+    <!-- Date Selection -->
+    <label for="date-selection">Select Date:</label>
+    <select id="date-selection" class="form-control w-25">
+        {% for date in available_dates %}
+        <option value="{{ date|date:'Y-m-d' }}" {% if date == selected_date %}selected{% endif %}>
+            {{ date|date:'Y-m-d' }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <!-- Seat Layout -->
+    <div class="seat-container">
+        <div class="screen">
+            <h4>SCREEN</h4>
+        </div>
+
+        {% for seat in seats %}
+        {% if forloop.counter0|divisibleby:50 and not forloop.first %}
+        <div class="seat-section-gap"></div> <!-- Adds a gap after every 50 seats -->
+        {% endif %}
+        <button class="seat btn {% if seat.seat_number in booked_seats %}btn-danger disabled{% else %}btn-outline-success{% endif %}"
+            data-seat="{{ seat.seat_number }}" {% if seat.seat_number in booked_seats %}disabled{% endif %}>
+            {{ seat.seat_number }}
+        </button>
+        {% endfor %}
+    </div>
+
+    <!-- Booking Options -->
+    <div class="booking-options mt-4">
+        <label for="booking-type">Select Booking Type:</label>
+        <select id="booking-type" class="form-control w-25">
+            <option value="direct">Direct Booking</option>
+            <option value="flexi">Flexi Booking</option>
+        </select>
+
+        <!-- Total Price Display -->
+        <div class="mt-3">
+            <h5>Total Price: ₹<span id="total-price">0</span></h5>
+        </div>
+
+        <button id="book-now" class="btn btn-primary mt-3">Book Now</button>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="paymentModalLabel">Confirm Payment</h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body text-center">
+                <h5 style="color:rgb(11, 11, 33);">Total Amount: ₹<span id="modal-total-price">0</span></h5>
+                <div class="payment-options mt-4 d-flex justify-content-around">
+                    <div class="payment-option" data-method="gpay">
+                        <img src="{% static 'images/k.png' %}" alt="GPay" style="width: 80px; height: 80px; object-fit: contain;">
+                        <p style="color: #ff0720;">GPay</p>
+                    </div>
+                    <div class="payment-option" data-method="phonepe">
+                        <img src="/static/images/php.png" alt="PhonePe" style="width: 80px; height: 80px;">
+                        <p style="color: #ff0720;">PhonePe</p>
+                    </div>
+                    <div class="payment-option" data-method="paytm">
+                        <img src="/static/images/tm.png" alt="Paytm" style="width: 80px; height: 80px; object-fit: contain;">
+                        <p style="color: #ff0720;">Paytm</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="confirm-booking" class="btn btn-success">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Styles -->
+<style>
+    .seat-container {
+        text-align: center;
+        margin: 20px 0;
+    }
+
+    .screen {
+        width: 100%;
+        height: 50px;
+        background: #040c55;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-radius: 10px;
+    }
+
+    .seat {
+        margin-top: 20px;
+        width: 60px;
+        height: 60px;
+        font-size: 14px;
+        border-radius: 5px;
+        color: #fff;
+    }
+
+    .btn-danger {
+        background-color: #ff0720;
+        /* Booked seats */
+    }
+
+    .btn-outline-success {
+        border: 1px solid #06127c;
+        /* Available seats */
+        color: #d1dad3;
+    }
+
+    .selected {
+        background-color: orange !important;
+        color: #fff;
+    }
+
+    .seat-section-gap {
+        width: 100%;
+        height: 40px;
+    }
+
+    .payment-option {
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .payment-option img {
+        border: 2px solid transparent;
+        border-radius: 10px;
+    }
+
+    .payment-option.selected img {
+        border: 2px solid #28a745;
+    }
+</style>
+
+<!-- Scripts -->
+<script>
+    let selectedSeats = new Set();
+    let seatPrice = 150; // Default price for Direct Booking
+    let selectedPaymentMethod = ""; // To store the selected payment method
+
+    // Handle date selection change
+    document.getElementById("date-selection").addEventListener("change", function () {
+        let selectedDate = this.value;
+        let url = new URL(window.location.href);
+        url.searchParams.set("date", selectedDate);
+        window.location.href = url.href;
+    });
+
+    // Handle seat selection
+    document.querySelectorAll(".seat").forEach(seat => {
+        seat.addEventListener("click", function () {
+            if (!this.classList.contains("btn-danger")) {
+                let seatNumber = this.getAttribute("data-seat");
+                if (selectedSeats.has(seatNumber)) {
+                    selectedSeats.delete(seatNumber);
+                    this.classList.remove("selected");
+                } else {
+                    selectedSeats.add(seatNumber);
+                    this.classList.add("selected");
+                }
+                updateTotalPrice();
+            }
+        });
+    });
+
+    // Handle booking type change
+    document.getElementById("booking-type").addEventListener("change", function () {
+        seatPrice = this.value === "flexi" ? 175 : 150; // Change seat price dynamically
+        updateTotalPrice();
+    });
+
+    // Update Total Price dynamically
+    function updateTotalPrice() {
+        let totalPrice = selectedSeats.size * seatPrice;
+        document.getElementById("total-price").innerText = totalPrice;
+        document.getElementById("modal-total-price").innerText = totalPrice;
+    }
+
+    // Show modal when clicking "Book Now"
+    document.getElementById("book-now").addEventListener("click", function () {
+        if (selectedSeats.size === 0) {
+            alert("Please select at least one seat before proceeding.");
+            return;
+        }
+        $("#paymentModal").modal("show");
+    });
+
+    // Handle payment option selection
+    document.querySelectorAll(".payment-option").forEach(option => {
+        option.addEventListener("click", function () {
+            document.querySelectorAll(".payment-option").forEach(opt => opt.classList.remove("selected"));
+            this.classList.add("selected");
+            selectedPaymentMethod = this.getAttribute("data-method");
+        });
+    });
+
+    // Confirm Booking with payment
+    document.getElementById("confirm-booking").addEventListener("click", function () {
+        if (!selectedPaymentMethod) {
+            alert("Please select a payment method.");
+            return;
+        }
+
+        let seat_numbers = Array.from(selectedSeats);
+        let selectedDate = document.getElementById("date-selection").value;
+        let bookingType = document.getElementById("booking-type").value;
+        let totalPrice = selectedSeats.size * seatPrice;
+
+        let requestData = {
+            seat_numbers: seat_numbers,
+            showtime_id: "{{ showtime.id }}",
+            selected_date: selectedDate,
+            booking_type: bookingType,
+            payment_method: selectedPaymentMethod,
+            total_price: totalPrice
+        };
+
+        console.log("Sending Booking Data:", requestData);
+
+        fetch("{% url 'book_seat' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.status === "success") {
+                window.location.reload();
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    });
+</script>
+
+<!-- Add Bootstrap and jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+{% endblock %}
