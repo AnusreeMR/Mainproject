@@ -2,10 +2,11 @@
 {% load static %}
 
 {% block content %}
-<div class="container">
-    <div class="card border-0">
+
+<div class="container" style="padding-top: 90px;">
+    <div class="card border-0"> <!-- Added margin-top -->
         <div class="card-header">
-            <h5 class="card-title">Manage Showtimes</h5>
+            <h4 class="card-title">Manage Showtimes</h4>
         </div>
         <div class="card-body">
             <!-- Create / Edit Form -->
@@ -26,7 +27,7 @@
 
                 <div class="mb-3">
                     <label for="show_time">Show Time</label>
-                    <input type="text" style="color: white;" name="show_time" id="show_time" class="form-control" required placeholder="e.g., 10:00 AM">
+                    <input type="time" style="color: white;" name="show_time" id="show_time" class="form-control" required>
                 </div>
 
                 <!-- Dates Section -->
@@ -40,6 +41,13 @@
 
                 <button type="submit" class="btn btn-success">Save</button>
                 <button type="button" class="btn btn-secondary" id="reset-form">Reset</button>
+                <br><br>
+                <div class="mb-4">
+                    <button id="generate-seats-btn" class="btn btn-primary">
+                        Generate Seats for All Showtimes
+                    </button>
+                    <div id="generate-seats-message" class="mt-2"></div>
+                </div>
             </form>
         </div>
     </div>
@@ -106,12 +114,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to add a date input field
     function addDateInput(date = "") {
+        const dateWrapper = document.createElement("div");
+        dateWrapper.className = "date-item d-flex align-items-center mb-2";
+        
         const dateInput = document.createElement("input");
         dateInput.type = "date";
         dateInput.name = "showtime_dates[]";
         dateInput.value = date;
-        dateInput.className = "form-control mb-2";
-        datesContainer.appendChild(dateInput);
+        dateInput.className = "form-control me-2";
+        
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "btn btn-danger btn-sm remove-date";
+        removeButton.textContent = "X";
+
+        dateWrapper.appendChild(dateInput);
+        dateWrapper.appendChild(removeButton);
+        datesContainer.appendChild(dateWrapper);
     }
 
     // Add Date Button Click
@@ -122,7 +141,14 @@ document.addEventListener("DOMContentLoaded", function () {
     form.addEventListener("submit", function (e) {
         e.preventDefault();
         let formData = new FormData(form);
-        
+        let showtimeId = document.getElementById("showtime_id").value;
+        formData.append("showtime_id", showtimeId);
+
+        // Append dates manually
+        document.querySelectorAll("input[name='showtime_dates[]']").forEach(dateInput => {
+            formData.append("showtime_dates[]", dateInput.value);
+        });
+
         fetch("{% url 'theatre_shows' %}", {
             method: "POST",
             body: formData
@@ -140,24 +166,48 @@ document.addEventListener("DOMContentLoaded", function () {
         button.addEventListener("click", function () {
             document.getElementById("showtime_id").value = this.dataset.id;
             document.getElementById("fk_movie").value = this.dataset.movie;
-            document.getElementById("show_time").value = this.dataset.time;
             document.getElementById("action").value = "update";
-
-            // Clear existing date inputs
             datesContainer.innerHTML = "";
 
-            // Fetch dates for the showtime
             fetch(`/get-showtime-dates/${this.dataset.id}/`)
                 .then(response => response.json())
                 .then(data => {
                     data.dates.forEach(date => {
                         addDateInput(date);
                     });
+                    document.getElementById("show_time").value = data.time;
                 });
         });
     });
 
-    // Delete Button Click
+    // Generate Seats Button
+    document.getElementById("generate-seats-btn").addEventListener("click", function() {
+        const messageDiv = document.getElementById("generate-seats-message");
+        messageDiv.textContent = "Generating seats...";
+        messageDiv.className = "mt-2 text-info";
+
+        fetch("{% url 'generate_seats' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.textContent = "Seats generated successfully!";
+                messageDiv.className = "mt-2 text-success";
+            } else {
+                messageDiv.textContent = "Error: " + data.message;
+                messageDiv.className = "mt-2 text-danger";
+            }
+        })
+        .catch(error => {
+            messageDiv.textContent = "Error: " + error;
+            messageDiv.className = "mt-2 text-danger";
+        });
+    });
+
     document.querySelectorAll(".delete-showtime").forEach(button => {
         button.addEventListener("click", function () {
             let showtimeId = this.dataset.id;
@@ -173,47 +223,199 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();  // Refresh the page
+                    location.reload();
                 }
             });
         });
     });
 
-    // Reset Form
     resetButton.addEventListener("click", function () {
         form.reset();
         document.getElementById("action").value = "create";
         document.getElementById("showtime_id").value = "";
-        datesContainer.innerHTML = "";  // Clear dates
+        datesContainer.innerHTML = "";
     });
 });
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-    document.addEventListener("click", function (event) {
-        if (event.target.classList.contains("remove-date")) {
-            let dateItem = event.target.closest(".date-item");
-            let showtimeId = dateItem.dataset.showtime;
-            let dateId = dateItem.dataset.date;
-
-            if (confirm("Are you sure you want to remove this date?")) {
-                fetch(`/remove-showtime-date/${showtimeId}/${dateId}/`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        dateItem.remove();  // Remove element from the DOM
-                    }
-                });
-            }
-        }
-    });
-});
-
 </script>
 {% endblock %}
+
+
+
+
+{% comment %} {% extends 'theatre/theatre_layout.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <div class="card border-0">
+        <div class="card-header">
+            <h5 class="card-title">Manage Showtimes</h5>
+        </div>
+        <div class="card-body">
+            <form id="showtime-form">
+                {% csrf_token %}
+                <input type="hidden" name="showtime_id" id="showtime_id">
+                <input type="hidden" name="action" id="action" value="create">
+                
+                <div class="mb-3">
+                    <label for="fk_movie">Select Movie</label>
+                    <select name="fk_movie" style="color: white;" id="fk_movie" class="form-control" required>
+                        <option value="">-- Select Movie --</option>
+                        {% for movie in movies %}
+                        <option value="{{ movie.id }}">{{ movie.movie_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="show_time">Show Time</label>
+                    <input type="time" style="color: white;" name="show_time" id="show_time" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="showtime_dates">Dates</label>
+                    <div id="showtime_dates"></div>
+                    <button type="button" class="btn btn-primary btn-sm mt-2" id="add-date">Add Date</button>
+                </div>
+
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" id="reset-form">Reset</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card border-0 mt-4">
+        <div class="card-header">
+            <h5 class="card-title">Showtimes List</h5>
+        </div>
+        <div class="card-body">
+            <table class="table" id="showtimes-table">
+                <thead>
+                    <tr>
+                        <th style="color: white;">#</th>
+                        <th style="color: white;">Movie</th>
+                        <th style="color: white;">Show Time</th>
+                        <th style="color: white;">Dates</th>
+                        <th style="color: white;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for showtime in showtimes %}
+                    <tr data-id="{{ showtime.id }}">
+                        <td style="color: white;">{{ forloop.counter }}</td>
+                        <td style="color: white;">{{ showtime.fk_movie.movie_name }}</td>
+                        <td class="show-time" style="color: white;">{{ showtime.show_time }}</td>
+                        <td style="color: white;">
+                            {% for date in showtime.dates.all %}
+                            <span class="date-item d-flex align-items-center" 
+                                  data-showtime="{{ showtime.id }}" data-date="{{ date.id }}" 
+                                  style="gap: 8px; margin-bottom: 5px; display: flex; align-items: center;">
+                                <span style="white-space: nowrap;">{{ date.date }}</span>
+                                <button class="btn btn-danger btn-sm remove-date" 
+                                        style="padding: 2px 6px; font-size: 12px; height: 22px; line-height: 1;">
+                                    X
+                                </button>
+                            </span>
+                        {% endfor %}
+                        </td>                        
+                        <td>
+                            <button class="btn btn-warning btn-sm edit-showtime" data-id="{{ showtime.id }}" data-movie="{{ showtime.fk_movie.id }}" data-time="{{ showtime.show_time }}">Edit</button>
+                            <button class="btn btn-danger btn-sm delete-showtime" data-id="{{ showtime.id }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No showtimes available.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("showtime-form");
+    const resetButton = document.getElementById("reset-form");
+    const addDateButton = document.getElementById("add-date");
+    const datesContainer = document.getElementById("showtime_dates");
+
+    function addDateInput(date = "") {
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.name = "showtime_dates[]";
+        dateInput.value = date;
+        dateInput.className = "form-control mb-2";
+        datesContainer.appendChild(dateInput);
+    }
+
+    addDateButton.addEventListener("click", function () {
+        addDateInput();
+    });
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        let formData = new FormData(form);
+        
+        fetch("{% url 'theatre_shows' %}", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    });
+
+    document.querySelectorAll(".edit-showtime").forEach(button => {
+        button.addEventListener("click", function () {
+            document.getElementById("showtime_id").value = this.dataset.id;
+            document.getElementById("fk_movie").value = this.dataset.movie;
+            document.getElementById("show_time").value = this.dataset.time;
+            document.getElementById("action").value = "update";
+
+            datesContainer.innerHTML = "";
+
+            fetch(`/get-showtime-dates/${this.dataset.id}/`)
+                .then(response => response.json())
+                .then(data => {
+                    data.dates.forEach(date => {
+                        addDateInput(date);
+                    });
+                });
+        });
+    });
+
+    document.querySelectorAll(".delete-showtime").forEach(button => {
+        button.addEventListener("click", function () {
+            let showtimeId = this.dataset.id;
+            let formData = new FormData();
+            formData.append("showtime_id", showtimeId);
+            formData.append("action", "delete");
+            formData.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+            fetch("{% url 'theatre_shows' %}", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        });
+    });
+
+    resetButton.addEventListener("click", function () {
+        form.reset();
+        document.getElementById("action").value = "create";
+        document.getElementById("showtime_id").value = "";
+        datesContainer.innerHTML = "";
+    });
+});
+</script>
+{% endblock %} {% endcomment %}
